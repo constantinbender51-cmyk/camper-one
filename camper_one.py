@@ -337,6 +337,24 @@ def place_stop_loss(api: kf.KrakenFuturesApi, side: str, size_btc: float, fill_p
     })
 
 
+def get_current_position(api: kf.KrakenFuturesApi) -> Dict:
+    """Get current open position from Kraken"""
+    try:
+        pos = api.get_open_positions()
+        for p in pos.get("openPositions", []):
+            if p["symbol"] == SYMBOL_FUTS_UC:
+                return {
+                    "signal": "LONG" if p["side"] == "long" else "SHORT",
+                    "side": p["side"],
+                    "size_btc": abs(float(p["size"])),
+                    "fill_price": float(p.get("fillPrice", 0)),
+                }
+        return None
+    except Exception as e:
+        log.warning(f"Failed to get position: {e}")
+        return None
+
+
 def smoke_test(api: kf.KrakenFuturesApi):
     """Run smoke test to verify API connectivity"""
     log.info("=== Smoke-test start ===")
@@ -362,6 +380,21 @@ def smoke_test(api: kf.KrakenFuturesApi):
     except Exception as e:
         log.error(f"Smoke test failed: {e}")
         return False
+
+
+def load_state() -> Dict:
+    return json.loads(STATE_FILE.read_text()) if STATE_FILE.exists() else {
+        "trades": [],
+        "predictions": [],
+        "starting_capital": None,
+        "performance": {},
+        "current_position": None,
+        "current_portfolio_value": 0
+    }
+
+
+def save_state(st: Dict):
+    STATE_FILE.write_text(json.dumps(st, indent=2))
 
 
 def update_state_with_current_position(api: kf.KrakenFuturesApi):
@@ -391,19 +424,6 @@ def update_state_with_current_position(api: kf.KrakenFuturesApi):
     
     save_state(state)
     log.info(f"Updated state with current position and portfolio value: ${portfolio_value:.2f}")
-
-
-def load_state() -> Dict:
-    return json.loads(STATE_FILE.read_text()) if STATE_FILE.exists() else {
-        "trades": [],
-        "predictions": [],
-        "starting_capital": None,
-        "performance": {}
-    }
-
-
-def save_state(st: Dict):
-    STATE_FILE.write_text(json.dumps(st, indent=2))
 
 
 def generate_signal(model: LSTMModel, df_current: pd.DataFrame, onchain_df: pd.DataFrame) -> Tuple[str, float, float, float]:
