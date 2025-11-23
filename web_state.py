@@ -228,7 +228,7 @@ HTML_TEMPLATE = """
             </div>
             <div class="card">
                 <h2>Total Return</h2>
-                <div class="card-value {{ 'positive' if total_return >= 0 else 'negative' }}">{{ total_return }}%</div>
+                <div class="card-value {{ 'positive' if total_return_raw >= 0 else 'negative' }}">{{ total_return }}%</div>
                 <div class="card-label">{{ total_trades }} trades executed</div>
             </div>
             <div class="card">
