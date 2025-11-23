@@ -294,8 +294,8 @@ HTML_TEMPLATE = """
                         {% if pred.actual %}
                         <div class="prediction-item">
                             <div class="prediction-item-label">Error</div>
-                            <div class="prediction-item-value {{ 'positive' if (pred.predicted - pred.actual)|abs < 100 else 'negative' }}">
-                                {{ ((pred.predicted - pred.actual) / pred.actual * 100)|round(2) }}%
+                            <div class="prediction-item-value {{ 'positive' if ((pred.predicted_raw - pred.actual_raw)|abs < 100) else 'negative' }}">
+                                {{ ((pred.predicted_raw - pred.actual_raw) / pred.actual_raw * 100)|round(2) }}%
                             </div>
                         </div>
                         {% endif %}
@@ -412,6 +412,12 @@ def dashboard():
             pred_copy['date'] = dt.strftime('%Y-%m-%d')
         except:
             pred_copy['date'] = pred['date']
+        
+        # Keep raw values for calculations
+        pred_copy['predicted_raw'] = pred['predicted'] if pred['predicted'] else 0
+        pred_copy['actual_raw'] = pred.get('actual') if pred.get('actual') else None
+        
+        # Format for display
         pred_copy['predicted'] = f"{pred['predicted']:.2f}" if pred['predicted'] else 'N/A'
         pred_copy['actual'] = f"{pred['actual']:.2f}" if pred.get('actual') else None
         predictions.append(pred_copy)
