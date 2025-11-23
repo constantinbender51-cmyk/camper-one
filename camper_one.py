@@ -337,6 +337,62 @@ def place_stop_loss(api: kf.KrakenFuturesApi, side: str, size_btc: float, fill_p
     })
 
 
+def smoke_test(api: kf.KrakenFuturesApi):
+    """Run smoke test to verify API connectivity"""
+    log.info("=== Smoke-test start ===")
+    
+    try:
+        # Test portfolio access
+        usd = portfolio_usd(api)
+        log.info(f"Portfolio value: ${usd:.2f} USD")
+        
+        # Test market data
+        mp = mark_price(api)
+        log.info(f"BTC mark price: ${mp:.2f}")
+        
+        # Check open positions
+        current_pos = get_current_position(api)
+        if current_pos:
+            log.info(f"Open position: {current_pos['signal']} {current_pos['size_btc']:.4f} BTC @ ${current_pos['fill_price']:.2f}")
+        else:
+            log.info("No open positions")
+        
+        log.info("=== Smoke-test complete ===")
+        return True
+    except Exception as e:
+        log.error(f"Smoke test failed: {e}")
+        return False
+
+
+def update_state_with_current_position(api: kf.KrakenFuturesApi):
+    """Update state file with current position from Kraken"""
+    state = load_state()
+    
+    # Get current position
+    current_pos = get_current_position(api)
+    portfolio_value = portfolio_usd(api)
+    
+    # Update state with current info
+    state["current_position"] = current_pos
+    state["current_portfolio_value"] = portfolio_value
+    
+    if state["starting_capital"] is None:
+        state["starting_capital"] = portfolio_value
+    
+    # Calculate performance if we have starting capital
+    if state["starting_capital"]:
+        total_return = (portfolio_value - state["starting_capital"]) / state["starting_capital"] * 100
+        state["performance"] = {
+            "current_value": portfolio_value,
+            "starting_capital": state["starting_capital"],
+            "total_return_pct": total_return,
+            "total_trades": len(state.get("trades", [])),
+        }
+    
+    save_state(state)
+    log.info(f"Updated state with current position and portfolio value: ${portfolio_value:.2f}")
+
+
 def load_state() -> Dict:
     return json.loads(STATE_FILE.read_text()) if STATE_FILE.exists() else {
         "trades": [],
@@ -512,6 +568,13 @@ def main():
         "leverage": LEV,
     }
     save_state(state)
+    
+    # Run smoke test
+    log.info("Running smoke test...")
+    smoke_test(api)
+    
+    # Update state with current position
+    update_state_with_current_position(api)
 
     if RUN_TRADE_NOW:
         log.info("RUN_TRADE_NOW=true – executing trade now")
