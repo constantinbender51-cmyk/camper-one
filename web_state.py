@@ -368,7 +368,9 @@ def load_state():
         "predictions": [],
         "starting_capital": None,
         "performance": {},
-        "model_info": {}
+        "model_info": {},
+        "current_position": None,
+        "current_portfolio_value": 0
     }
 
 
@@ -376,22 +378,34 @@ def load_state():
 def dashboard():
     state = load_state()
     
-    # Current position (from last trade)
+    # Current position - prioritize live position from Kraken
+    current_position = state.get("current_position")
     current_signal = "N/A"
     current_size = "0.0000"
     current_price = "0.00"
-    today_prediction = "N/A"
     
-    if state["trades"]:
+    if current_position:
+        # Use live position from Kraken
+        current_signal = current_position["signal"]
+        current_size = f"{current_position['size_btc']:.4f}"
+        current_price = f"{current_position['fill_price']:.2f}"
+    elif state["trades"]:
+        # Fall back to last trade if no live position
         last_trade = state["trades"][-1]
         current_signal = last_trade["signal"]
         current_size = f"{last_trade['size_btc']:.4f}"
         current_price = f"{last_trade['fill_price']:.2f}"
+    
+    # Today's prediction
+    today_prediction = "N/A"
+    if state["trades"]:
+        last_trade = state["trades"][-1]
         today_prediction = f"{last_trade['today_prediction']:.2f}"
     
-    # Performance metrics
+    # Performance metrics - use live portfolio value if available
     performance = state.get("performance", {})
-    current_value = f"{performance.get('current_value', 0):.2f}"
+    current_value_raw = state.get("current_portfolio_value", performance.get('current_value', 0))
+    current_value = f"{current_value_raw:.2f}"
     starting_capital = f"{performance.get('starting_capital', 0):.2f}"
     total_return_raw = performance.get('total_return_pct', 0)
     total_return = f"{total_return_raw:.2f}"
