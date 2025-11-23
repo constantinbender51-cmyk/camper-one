@@ -24,7 +24,7 @@ import binance_ohlc
 
 from sklearn.preprocessing import StandardScaler
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
+from tensorflow.keras.layers import LSTM, Dense, Input
 from tensorflow.keras.optimizers import Adam
 
 dry = os.getenv("DRY_RUN", "false").lower() in {"1", "true", "yes"}
@@ -203,7 +203,8 @@ class LSTMModel:
     def build_model(self):
         """Build LSTM model matching app.py specification"""
         model = Sequential()
-        model.add(LSTM(100, activation='relu', return_sequences=True, input_shape=(20, 10)))
+        model.add(Input(shape=(20, 10)))
+        model.add(LSTM(100, activation='relu', return_sequences=True))
         model.add(LSTM(100, activation='relu', return_sequences=True))
         model.add(LSTM(100, activation='relu'))
         model.add(Dense(1))
