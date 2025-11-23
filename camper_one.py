@@ -93,6 +93,17 @@ def calculate_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
     """Calculate technical indicators matching the app.py specification"""
     df = df.copy()
     
+    # Ensure index is datetime
+    if not isinstance(df.index, pd.DatetimeIndex):
+        if 'date' in df.columns:
+            df['date'] = pd.to_datetime(df['date'])
+            df.set_index('date', inplace=True)
+        elif 'timestamp' in df.columns:
+            df['timestamp'] = pd.to_datetime(df['timestamp'])
+            df.set_index('timestamp', inplace=True)
+        else:
+            raise ValueError("DataFrame must have a datetime index or 'date'/'timestamp' column")
+    
     # 3-day SMA for close price
     df['sma_3_close'] = df['close'].rolling(window=3).mean()
     
