@@ -10,7 +10,7 @@ import logging
 import os
 import sys
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, Tuple
 import subprocess
@@ -232,7 +232,7 @@ class LSTMModel:
         # Calculate training MSE
         train_predictions = self.model.predict(X_train_reshaped, verbose=0).flatten()
         self.train_mse = np.mean((y_train - train_predictions) ** 2)
-        self.last_trained = datetime.utcnow().isoformat()
+        self.last_trained = datetime.now(timezone.utc).isoformat()
         
         log.info(f"Training complete. MSE: {self.train_mse:.2f}")
     
@@ -430,7 +430,7 @@ def daily_trade(api: kf.KrakenFuturesApi, model: LSTMModel, onchain_df: pd.DataF
     
     # Record trade
     trade_record = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "signal": signal,
         "side": side,
         "size_btc": size_btc,
@@ -468,7 +468,7 @@ def daily_trade(api: kf.KrakenFuturesApi, model: LSTMModel, onchain_df: pd.DataF
 
 def wait_until_00_01_utc():
     """Wait until 00:01 UTC for daily execution"""
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     next_run = now.replace(hour=0, minute=1, second=0, microsecond=0)
     if now >= next_run:
         next_run += timedelta(days=1)
