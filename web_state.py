@@ -7,7 +7,7 @@ Displays execution logs, predictions, and performance metrics
 from flask import Flask, render_template_string
 import json
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 
 app = Flask(__name__)
@@ -213,6 +213,13 @@ HTML_TEMPLATE = """
     <div class="container">
         <h1>🤖 LSTM BTC Trading Dashboard</h1>
         <div class="subtitle">Real-time monitoring of AI-powered trading strategy</div>
+        
+        {% if total_trades == 0 %}
+        <div style="background: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+            ⏳ <strong>Waiting for first trade execution at 00:01 UTC</strong><br>
+            <small>The bot is trained and ready. Live trading data will appear after the first trade.</small>
+        </div>
+        {% endif %}
         
         <!-- Performance Cards -->
         <div class="grid">
@@ -455,7 +462,7 @@ def dashboard():
         last_trained=last_trained,
         predictions=predictions,
         trades=trades,
-        last_updated=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+        last_updated=datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
     )
 
 
