@@ -1,2 +1,2 @@
 web: gunicorn web_state:app
-worker: python lr_live_bi.py
+worker: python camper_one.py
