@@ -1,9 +1,9 @@
-Flask==2.3.3
-pandas==1.5.3
+Flask
+pandas
 numpy
-scikit-learn==1.2.2
-requests==2.31.0
-gunicorn==21.2.0
+scikit-learn
+requests
+gunicorn
 setuptools==65.5.0
 tensorflow==2.13.0
 kraken-futures
