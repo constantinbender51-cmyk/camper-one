@@ -386,7 +386,8 @@ def dashboard():
     performance = state.get("performance", {})
     current_value = f"{performance.get('current_value', 0):.2f}"
     starting_capital = f"{performance.get('starting_capital', 0):.2f}"
-    total_return = f"{performance.get('total_return_pct', 0):.2f}"
+    total_return_raw = performance.get('total_return_pct', 0)
+    total_return = f"{total_return_raw:.2f}"
     total_trades = performance.get('total_trades', 0)
     
     # Model info
@@ -439,6 +440,7 @@ def dashboard():
         current_value=current_value,
         starting_capital=starting_capital,
         total_return=total_return,
+        total_return_raw=total_return_raw,
         total_trades=total_trades,
         today_prediction=today_prediction,
         train_mse=train_mse,
